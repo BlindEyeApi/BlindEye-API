@@ -20,5 +20,5 @@ auth_handler = AuthHandler()
 
 @router.get("/")
 async def get_clients(username=Depends(auth_handler.auth_wrapper)):
-    resp = { username : [{"client1":"Secret Jack"},{"client2":"Steve Secure"},{"client3":"Seal Secure"} ]}
+    resp = { "user" : username}
     return resp
