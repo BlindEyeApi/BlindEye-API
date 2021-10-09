@@ -13,3 +13,6 @@ py2neo
 neo4j
 python-dotenv
 coverage
+bcrypt==3.2.0
+passlib==1.7.4
+PyJWT==2.0.0

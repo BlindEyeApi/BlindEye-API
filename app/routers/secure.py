@@ -4,6 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException,Request, Form
 from typing import List
 from pydantic import BaseModel
 from ..dependencies import get_token_header
+from ..auth.auth import AuthHandler
+from ..schemas import AuthDetails
+
 
 
 router = APIRouter(
@@ -13,7 +16,9 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+auth_handler = AuthHandler()
+
 @router.get("/")
-async def get_clients():
-    resp = {"public" : [{"client1":"Secret Jack"},{"client2":"Steve Secure"},{"client3":"Seal Secure"} ]}
+async def get_clients(username=Depends(auth_handler.auth_wrapper)):
+    resp = { username : [{"client1":"Secret Jack"},{"client2":"Steve Secure"},{"client3":"Seal Secure"} ]}
     return resp
