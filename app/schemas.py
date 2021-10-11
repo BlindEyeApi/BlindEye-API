@@ -13,6 +13,7 @@ class UserDetails(BaseModel):
     email: str
     role: str
     mobile: str
+    ref: str
         
     
     

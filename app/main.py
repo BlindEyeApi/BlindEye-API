@@ -1,3 +1,5 @@
+import time
+import logging as logger
 from fastapi import Depends, FastAPI, HTTPException
 from .auth.auth import AuthHandler
 from .schemas import AuthDetails, UserDetails
@@ -6,9 +8,13 @@ from .schemas import AuthDetails, UserDetails
 from .dependencies import get_token_header
 from .internal import admin
 from .routers import public, secure
+import uuid
 
 
 app = FastAPI()
+
+START_TIME = time.time()
+logger.info(f"Api started: {START_TIME}")
 
 auth_handler = AuthHandler()
 
@@ -18,7 +24,6 @@ users = []
 
 app.include_router(public.router)
 app.include_router(secure.router)
-
 app.include_router(
     admin.router,
     prefix="/admin",
@@ -30,7 +35,8 @@ app.include_router(
 
 @app.get("/")
 async def root():
-    return {"message": "Hello Bigger Applications!", "users" : users}
+    logger.info("Api / called")
+    return {"message": "Hello Bigger Applications!", "users" : users, "profiles" : profiles}
 
 
 @app.post('/register', status_code=201)
@@ -38,20 +44,24 @@ def register(user_details: UserDetails):
     if any(x['username'] == user_details.username for x in users):
         raise HTTPException(status_code=400, detail='Username is taken')
     hashed_password = auth_handler.get_password_hash(user_details.password)
+    user_id = uuid.uuid4()
+    print(f"User ref = {user_id}")
+    # user_details["ref"]=user_id
     # Add user to dataset
     users.append({
         'username': user_details.username,
         'password': hashed_password    
     })
     profiles.append({
-        "username":user_details
+        user_details.username : user_details
     })
 
-    return
+    return {"status":"Profile created"}
 
 
 @app.post('/login')
 def login(auth_details: AuthDetails):
+    logger.info(f"Api /login called: {time.time()}")
     user = None
     # Find user in dataset
     for x in users:
@@ -67,4 +77,18 @@ def login(auth_details: AuthDetails):
 
 @app.get('/protected')
 def protected(username=Depends(auth_handler.auth_wrapper)):
+    logger.info(f"Api /protected called: {time.time()}")
     return { 'name': username, 'profiles': profiles }
+
+
+
+@app.get('/profile/{username}')
+def profile(username):
+    print(f"username supplied = {username}")
+    for prof in profiles:
+        print(f"prof : {prof}")
+        print(f"Profile : {prof.keys()}")
+        if username in prof.keys():
+            return {'profile': prof }
+    raise HTTPException(status_code=404, detail='Username not found')
+    
