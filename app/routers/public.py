@@ -17,3 +17,9 @@ router = APIRouter(
 async def get_clients():
     resp = {"public" : [{"client1":"Joe Public"},{"client2":"Joey Public"},{"client3":"Jo Public"} ]}
     return resp
+
+
+@router.post("/create")
+async def create_client():
+    resp = {"public" : [{"client1":"Joe Public"},{"client2":"Joey Public"},{"client3":"Jo Public"} ]}
+    return resp

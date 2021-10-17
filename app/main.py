@@ -4,7 +4,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from .auth.auth import AuthHandler
 from .schemas import AuthDetails, UserDetails
 
-
+from .gdb.services import client
 from .dependencies import get_token_header
 from .internal import admin
 from .routers import public, secure
@@ -40,24 +40,24 @@ async def root():
 
 
 @app.post('/register', status_code=201)
-def register(user_details: UserDetails):
+def register(user_details: UserDetails ):
     if any(x['username'] == user_details.username for x in users):
         raise HTTPException(status_code=400, detail='Username is taken')
     hashed_password = auth_handler.get_password_hash(user_details.password)
     user_id = uuid.uuid4()
     print(f"User ref = {user_id}")
-    # user_details["ref"]=user_id
-    # Add user to dataset
     users.append({
         'username': user_details.username,
         'password': hashed_password    
     })
+    user_details.password = hashed_password
+    user_details.ref = uuid.uuid4()
+    
     profiles.append({
         user_details.username : user_details
     })
-
-    return {"status":"Profile created"}
-
+    resp = client.register_client(user_details)
+    return resp
 
 @app.post('/login')
 def login(auth_details: AuthDetails):
